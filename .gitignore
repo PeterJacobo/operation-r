@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+*.sqlite3
+*.db
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.pip-wheel-metadata/
+
+# Flask/FastAPI
+instance/
+*.env
+.env.*
+*.secret
+*.bak
+
+# Docker
+*.pid
+*.seed
+*.tar
+*.gz
+*.swp
+docker-compose.override.yml
+.dockerignore
+
+# VS Code
+.vscode/
+.history/
+*.code-workspace
+
+# GitHub Copilot
+copilot.*
+copilot-logs/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
+*.cache
+*.bak
+*.orig
+
+# Project-specific
+data/
+__output__/
+*.printed.txt
+*.task.json
