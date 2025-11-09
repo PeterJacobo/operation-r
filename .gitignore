@@ -22,7 +22,7 @@ ENV/
 # Flask/FastAPI
 instance/
 *.env
-.env.*
+.env
 *.secret
 *.bak
 
@@ -60,3 +60,4 @@ data/
 __output__/
 *.printed.txt
 *.task.json
+credentials.json
