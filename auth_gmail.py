@@ -1,8 +1,8 @@
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-import pickle, os
+import pickle, os, webbrowser
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 def authenticate():
     creds = None
@@ -14,12 +14,14 @@ def authenticate():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-            auth_url, _ = flow.authorization_url(prompt='consent')
-
-            print("Go to this URL:", auth_url)
-            code = input("Enter the authorization code: ")
-            creds = flow.fetch_token(code=code)
+            print("Opening browser for authentication...")
+            creds = flow.run_local_server(port=0)
 
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
     return creds
+
+if __name__ == "__main__":
+    print("Authenticating with Gmail API...")
+    authenticate()
+    print("Authentication successful! token.pickle has been created/updated.")

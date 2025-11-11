@@ -21,7 +21,7 @@ services:
     volumes:
       - ./data:/app/data # Optional: for logs or persistent config
       - ./credentials.json:/app/credentials.json
-      # - ./token.pickle:/app/token.pickle
+      - ./token.pickle:/app/token.pickle
     networks:
       - operation-net
 

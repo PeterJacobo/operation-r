@@ -60,4 +60,7 @@ data/
 __output__/
 *.printed.txt
 *.task.json
+
+# Gmail Authentication
 credentials.json
+token.pickle
