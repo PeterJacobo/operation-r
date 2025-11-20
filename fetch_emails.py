@@ -94,24 +94,28 @@ while True:
                         break
 
                 # Print the email
+                print_successful = False
                 if printer:
                     try:
                         printer.text(f"From: {sender}\nSubject: {subject}\n\n{body[:500]}\n")
                         printer.cut()
                         print(f"Printed: {subject}")
+                        print_successful = True
                     except Exception as print_error:
                         print(f"Error printing: {print_error}")
                         print("Libusb backend not available. Install libusb-1.0.dll for Windows.")
-                        print(f"[TEST MODE] Would print: {subject}")
+                        print(f"Failed to print email. Will retry on next check.")
                 else:
-                    print(f"[TEST MODE] Would print: {subject}")
+                    print(f"No printer available. Skipping: {subject}")
                 
-                # Add the Printed label
-                service.users().messages().modify(
-                    userId='me',
-                    id=msg['id'],
-                    body={'addLabelIds': [printed_label_id]}
-                ).execute()
+                # Only add the Printed label if printing was successful
+                if print_successful:
+                    service.users().messages().modify(
+                        userId='me',
+                        id=msg['id'],
+                        body={'addLabelIds': [printed_label_id]}
+                    ).execute()
+                    print(f"Added 'Printed' label to: {subject}")
                 
         # Wait 10 minutes before checking again
         time.sleep(600)
