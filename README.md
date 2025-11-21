@@ -8,9 +8,10 @@
 
 - 📨 **Gmail Integration**: Automatically monitor and print emails labeled with `KanbanPrint`
 - 🎫 **Jira Ticket Printing**: Print Jira tickets from XML exports with clean, readable formatting
+- 🏷️ **Large Label Printing**: Create large ASCII art labels rotated 90° for Kanban lane headers
 - 🖨️ **Thermal Printer Support**: Uses `python-escpos` for Rongta RP332 (80mm paper)
 - 🎛️ **Interactive CLI Menu**: User-friendly numbered menu for all operations
-- 🏷️ **Smart Label Management**: Tracks printed emails to avoid duplicates
+- 📝 **Smart Label Management**: Tracks printed emails to avoid duplicates
 - 🌐 **Web Server**: Flask API endpoints for webhooks and remote printing
 - 🧪 **Test Printing**: Verify printer setup with ASCII art test page
 
@@ -86,7 +87,8 @@ Operation R - Main Menu
 2. Reset labels (remove 'Printed' labels)
 3. Test print (verify printer setup)
 4. Print ticket (from XML)
-5. Start web server
+5. Print label (large text, rotated 90°)
+6. Start web server
 0. Exit
 ========================================
 ```
@@ -105,6 +107,14 @@ python main.py print-ticket
 # Or specify file directly:
 python main.py print-ticket tickets/QCWEB-4613.xml
 ```
+
+**Print Large Label**:
+```bash
+python main.py print-label TODO
+python main.py print-label IN PROGRESS
+python main.py print-label DONE
+```
+Creates large ASCII art labels rotated 90° for visibility from a distance.
 
 **Test Printer**:
 ```bash
@@ -135,6 +145,27 @@ Ticket prints include:
 - Type, Status, Priority
 - Assignee
 - Labels
+
+---
+
+## 🏷️ Large Label Printing
+
+Create large, visible labels for Kanban lanes or sections:
+
+1. **Interactive**: Run `python main.py` → Option 5 → Enter text
+2. **Command Line**: `python main.py print-label YOUR TEXT`
+
+**Features:**
+- 7-line tall ASCII art letters
+- Double-width printing for maximum visibility
+- Rotated 90° to print lengthwise on paper
+- Perfect for "TODO", "IN PROGRESS", "DONE" lane headers
+- Supports A-Z, 0-9, and basic punctuation
+
+**Tips:**
+- Keep text under 20 characters for reasonable label length
+- Use short, impactful words (TODO, BLOCKED, REVIEW)
+- Labels are designed to be visible from across the room
 
 ---
 
@@ -180,6 +211,7 @@ operation-r/
 ├── main.py                 # CLI entry point with interactive menu
 ├── fetch_emails.py         # Gmail monitoring service
 ├── print_ticket.py         # Jira ticket printing from XML
+├── print_label.py          # Large ASCII label printing (rotated 90°)
 ├── reset_printed_labels.py # Remove printed labels from emails
 ├── auth_gmail.py           # Gmail API authentication
 ├── credentials.json        # Gmail API credentials

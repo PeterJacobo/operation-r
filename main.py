@@ -485,7 +485,8 @@ def interactive_menu():
         print("2. Reset labels (remove 'Printed' labels)")
         print("3. Test print (verify printer setup)")
         print("4. Print ticket (from XML)")
-        print("5. Start web server")
+        print("5. Print label (large text, rotated 90°)")
+        print("6. Start web server")
         print("0. Exit")
         print("=" * 40)
         
@@ -548,6 +549,38 @@ def interactive_menu():
                 input("\nPress Enter to continue...")
                 
         elif choice == "5":
+            # Print label
+            print("\n" + "-" * 40)
+            print("Print Label (Large Text)")
+            print("-" * 40)
+            print("Text will be printed in large ASCII letters,")
+            print("rotated 90° for lengthwise visibility.")
+            print("-" * 40)
+            
+            label_text = input("\nEnter text for label: ").strip()
+            
+            if not label_text:
+                print("✗ No text entered")
+                input("\nPress Enter to continue...")
+                continue
+            
+            if len(label_text) > 20:
+                print(f"\nWarning: Text is {len(label_text)} characters long.")
+                print("Label may be very lengthy.")
+                confirm = input("Continue? (y/n): ").strip().lower()
+                if confirm != 'y':
+                    print("Cancelled")
+                    input("\nPress Enter to continue...")
+                    continue
+            
+            import subprocess
+            result = subprocess.run([sys.executable, "print_label.py"] + label_text.split())
+            if result.returncode == 0:
+                input("\nPress Enter to continue...")
+            else:
+                input("\nPrinting failed. Press Enter to continue...")
+                
+        elif choice == "6":
             print("\nStarting web server...")
             print("Host: 0.0.0.0")
             print("Port: 5000")
@@ -594,6 +627,17 @@ def main():
         "xml_file",
         nargs="?",
         help="Path to Jira XML export file (optional, will show selection menu if omitted)"
+    )
+    
+    # Print label command
+    label_parser = subparsers.add_parser(
+        "print-label",
+        help="Print large text label rotated 90 degrees"
+    )
+    label_parser.add_argument(
+        "text",
+        nargs="+",
+        help="Text to print on label"
     )
     
     # Server command
@@ -669,6 +713,12 @@ def main():
             except ValueError:
                 print("✗ Invalid input")
                 return 1
+    elif args.command == "print-label":
+        # Print label with provided text
+        label_text = ' '.join(args.text)
+        import subprocess
+        result = subprocess.run([sys.executable, "print_label.py"] + args.text)
+        return result.returncode
     elif args.command == "server":
         return start_server(host=args.host, port=args.port)
     else:
