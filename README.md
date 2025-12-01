@@ -9,7 +9,8 @@
 - 📨 **Gmail Integration**: Automatically monitor and print emails labeled with `KanbanPrint`
 - 🎫 **Jira Ticket Printing**: Print Jira tickets from XML exports with clean, readable formatting
 - 🏷️ **Large Label Printing**: Create large ASCII art labels rotated 90° for Kanban lane headers
-- 🖨️ **Thermal Printer Support**: Uses `python-escpos` for Rongta RP332 (80mm paper)
+- 🖨️ **Flexible Printer Support**: USB or network connection for thermal printers
+- 🎛️ **Interactive Setup Wizard**: Easy printer configuration for USB or network printers
 - 🎛️ **Interactive CLI Menu**: User-friendly numbered menu for all operations
 - 📝 **Smart Label Management**: Tracks printed emails to avoid duplicates
 - 🌐 **Web Server**: Flask API endpoints for webhooks and remote printing
@@ -25,8 +26,8 @@
 | Printer Driver | python-escpos       |
 | Email API      | Gmail API           |
 | Web Framework  | Flask               |
-| Hardware       | Rongta RP332 (USB)  |
-| Platform       | Windows 11          |
+| Hardware       | Thermal Printers (USB/Network) |
+| Platform       | Windows 11 / Linux / macOS |
 
 ---
 
@@ -49,30 +50,60 @@ venv\Scripts\Activate.ps1  # Windows PowerShell
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
-Copy `.env.example` to `.env` and configure:
+### 4. Configure Printer
+Run the interactive setup wizard to configure your printer connection:
+```bash
+python main.py setup
+```
+
+The wizard will guide you through:
+- Choosing between USB or network connection
+- Entering printer connection details (USB IDs or IP address)
+- Testing the printer connection
+- Saving configuration to `.env` file
+
+Alternatively, manually edit `.env`:
 ```bash
 cp .env.example .env
 ```
+### 6. Install USB Driver (Windows - USB Printers Only)
+If using USB connection on Windows:
 
-Required settings:
-- `USB_VENDOR_ID`: Printer USB vendor ID (default: 0x0FE6)
-- `USB_PRODUCT_ID`: Printer USB product ID (default: 0x811E)
-- `ATLASSIAN_CLOUD_ID`: Your Jira cloud instance ID
-
-### 5. Gmail API Setup
-1. Enable Gmail API in Google Cloud Console
-2. Download `credentials.json` to project root
-3. Run authentication: `python auth_gmail.py`
-
-### 6. Install USB Driver (Windows)
 Download libusb from: https://github.com/libusb/libusb/releases
 Extract `libusb-1.0.dll` to `C:\Windows\System32`
 
----
+**Note**: Network printers don't require USB drivers.
+- `USB_VENDOR_ID`: Printer USB vendor ID (default: 0x0FE6)
+- `USB_PRODUCT_ID`: Printer USB product ID (default: 0x811E)
 
-## 🚀 Usage
+For network printers:
+- `PRINTER_CONNECTION_TYPE=network`
+- `PRINTER_IP`: Printer IP address (e.g., 192.168.1.100)
+This launches a numbered menu:
+```
+========================================
+Operation R - Main Menu
+========================================
+1. Fetch emails (start monitoring service)
+2. Reset labels (remove 'Printed' labels)
+3. Setup printer (configure USB/network)
+4. Test print (verify printer setup)
+5. Print ticket (from XML)
+6. Print label (large text, rotated 90°)
+7. Start web server
+0. Exit
+========================================
+```
 
+### Command Line Usage
+
+**Setup Printer**:
+```bash
+python main.py setup
+```
+Interactive wizard to configure USB or network printer connection.
+
+**Fetch and Print Emails**:
 ### Interactive Menu (Recommended)
 ```bash
 python main.py
@@ -173,23 +204,76 @@ Create large, visible labels for Kanban lanes or sections:
 
 ### POST /print
 Print custom text:
-```bash
-curl -X POST http://localhost:5000/print \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Custom task description"}'
-```
-
-### POST /jira-webhook
-Jira webhook endpoint (for future automation).
-
----
-
 ## 🔧 Configuration
 
-### Printer Settings
-Edit `.env` to match your printer:
+### Printer Connection Types
+
+**USB Printer (Direct Connection)**:
+- Ideal for single workstation setups
+- Requires USB connection to computer
+- Windows requires libusb driver
+
+Configuration in `.env`:
 ```env
+PRINTER_CONNECTION_TYPE=usb
 USB_VENDOR_ID=0x0FE6
+USB_PRODUCT_ID=0x811E
+```
+
+Find your USB printer IDs:
+```bash
+# Windows (PowerShell)
+Get-PnpDevice -Class USB
+
+# Linux/Mac
+```
+operation-r/
+├── main.py                 # CLI entry point with interactive menu
+├── setup_printer.py        # Interactive printer setup wizard
+├── printer_config.py       # Printer connection abstraction (USB/network)
+├── fetch_emails.py         # Gmail monitoring service
+├── print_ticket.py         # Jira ticket printing from XML
+├── print_label.py          # Large ASCII label printing (rotated 90°)
+├── reset_printed_labels.py # Remove printed labels from emails
+├── auth_gmail.py           # Gmail API authentication
+├── credentials.json        # Gmail API credentials
+├── .env                    # Environment configuration
+├── requirements.txt        # Python dependencies
+├── tickets/                # Jira XML exports
+│   ├── QCLVL3-1624.xml
+│   ├── QCLVL3-1637.xml
+│   └── QCWEB-4613.xml
+└── data/                   # Runtime data (token.json)
+```d your network printer IP:
+- Check printer's network settings menu
+- Print network configuration page from printer
+- Check your router's connected devices list
+- Use printer's display panel (if available)
+
+## 🐛 Troubleshooting
+
+**Printer Not Found (USB)**:
+- Verify USB connection and printer is powered on
+- Check USB IDs match your printer (run setup wizard)
+- Install libusb driver on Windows
+- Try a different USB port
+- Check Device Manager for USB device errors
+
+**Printer Not Found (Network)**:
+- Verify printer is powered on and connected to network
+- Ping the printer IP address to test connectivity
+- Check firewall isn't blocking port 9100 (or your configured port)
+- Verify printer has a static IP or DHCP reservation
+- Ensure printer is on the same network/VLAN
+- Check printer's network settings page for correct IP
+
+**Connection Type Issues**:
+- Run `python main.py setup` to reconfigure printer
+- Check `PRINTER_CONNECTION_TYPE` is set correctly in `.env`
+- For USB: ensure USB_VENDOR_ID and USB_PRODUCT_ID are correct
+- For network: ensure PRINTER_IP and PRINTER_PORT are correct
+
+**Gmail Authentication**:
 USB_PRODUCT_ID=0x811E
 ```
 

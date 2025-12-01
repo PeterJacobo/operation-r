@@ -6,13 +6,10 @@ Print Label - Print large ASCII text labels rotated 90 degrees for visibility
 import os
 import sys
 from dotenv import load_dotenv
+from printer_config import get_printer, PrinterConnectionError
 
 # Load environment variables
 load_dotenv()
-
-# Get USB configuration from environment
-USB_VENDOR_ID = int(os.getenv('USB_VENDOR_ID', '0x0FE6'), 16)
-USB_PRODUCT_ID = int(os.getenv('USB_PRODUCT_ID', '0x811E'), 16)
 
 # ASCII art font dictionary for large letters (7 lines tall, wider spacing)
 ASCII_FONT = {
@@ -456,8 +453,6 @@ def print_label(text):
     """Print a large text label rotated 90 degrees"""
     
     try:
-        from escpos.printer import Usb
-        
         print(f"Creating label: {text}")
         
         # Convert text to ASCII art
@@ -471,14 +466,10 @@ def print_label(text):
         # Connect to printer
         print("Connecting to printer...")
         try:
-            printer = Usb(USB_VENDOR_ID, USB_PRODUCT_ID)
+            printer = get_printer()
             print("✓ Printer connected\n")
-        except Exception as e:
-            print(f"✗ Failed to connect to printer: {e}")
-            print("\nTroubleshooting:")
-            print("1. Ensure printer is powered on and connected via USB")
-            print("2. On Windows, install libusb from: https://github.com/libusb/libusb/releases")
-            print("3. Extract libusb-1.0.dll to C:\\Windows\\System32")
+        except PrinterConnectionError as e:
+            print(f"✗ {e}")
             return 1
         
         # Print label

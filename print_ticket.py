@@ -9,13 +9,10 @@ from dotenv import load_dotenv
 import xml.etree.ElementTree as ET
 from html import unescape
 import re
+from printer_config import get_printer, PrinterConnectionError
 
 # Load environment variables
 load_dotenv()
-
-# Get USB configuration from environment
-USB_VENDOR_ID = int(os.getenv('USB_VENDOR_ID', '0x0FE6'), 16)
-USB_PRODUCT_ID = int(os.getenv('USB_PRODUCT_ID', '0x811E'), 16)
 
 def strip_html(text):
     """Remove HTML tags and decode entities from text"""
@@ -105,8 +102,6 @@ def print_jira_ticket(xml_file):
     """Print a Jira ticket from XML export to thermal printer"""
     
     try:
-        from escpos.printer import Usb
-        
         # Parse XML
         print(f"Parsing XML file: {xml_file}")
         ticket = parse_jira_xml(xml_file)
@@ -115,14 +110,10 @@ def print_jira_ticket(xml_file):
         # Connect to printer
         print("Connecting to printer...")
         try:
-            printer = Usb(USB_VENDOR_ID, USB_PRODUCT_ID)
+            printer = get_printer()
             print("✓ Printer connected\n")
-        except Exception as e:
-            print(f"✗ Failed to connect to printer: {e}")
-            print("\nTroubleshooting:")
-            print("1. Ensure printer is powered on and connected via USB")
-            print("2. On Windows, install libusb from: https://github.com/libusb/libusb/releases")
-            print("3. Extract libusb-1.0.dll to C:\\Windows\\System32")
+        except PrinterConnectionError as e:
+            print(f"✗ {e}")
             return 1
         
         # Print ticket

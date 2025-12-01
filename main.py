@@ -41,31 +41,30 @@ def test_print():
     print("Testing printer connection and functionality...\n")
     
     try:
-        from escpos.printer import Usb
+        from printer_config import get_printer, PrinterConnectionError, get_connection_info
         from dotenv import load_dotenv
         import traceback
         from datetime import datetime
         
         load_dotenv()
         
-        # USB Vendor and Product ID from environment
-        USB_VENDOR_ID = int(os.getenv("USB_VENDOR_ID", "0x0FE6"), 16)
-        USB_PRODUCT_ID = int(os.getenv("USB_PRODUCT_ID", "0x811E"), 16)
-        
+        # Display connection info
+        conn_info = get_connection_info()
         print(f"Attempting to connect to printer...")
-        print(f"USB Vendor ID: 0x{USB_VENDOR_ID:04X}")
-        print(f"USB Product ID: 0x{USB_PRODUCT_ID:04X}\n")
+        print(f"Connection Type: {conn_info['connection_type'].upper()}")
+        
+        if conn_info['connection_type'] == 'usb':
+            print(f"USB Vendor ID: {conn_info['vendor_id']}")
+            print(f"USB Product ID: {conn_info['product_id']}\n")
+        else:
+            print(f"Network IP: {conn_info['printer_ip']}")
+            print(f"Network Port: {conn_info['printer_port']}\n")
         
         try:
-            printer = Usb(USB_VENDOR_ID, USB_PRODUCT_ID)
+            printer = get_printer()
             print("✓ Printer connected successfully!\n")
-        except Exception as e:
-            print(f"✗ Failed to connect to printer: {e}")
-            print("\nTroubleshooting:")
-            print("1. Ensure printer is powered on and connected via USB")
-            print("2. On Windows, install libusb from: https://github.com/libusb/libusb/releases")
-            print("3. Extract libusb-1.0.dll to C:\\Windows\\System32")
-            print("4. Verify USB_VENDOR_ID and USB_PRODUCT_ID in .env file")
+        except PrinterConnectionError as e:
+            print(f"✗ {e}")
             return 1
         
         # Print test page with ASCII art
@@ -226,22 +225,15 @@ def print_ticket(issue_key, cloud_id=None):
     
     # Now print the ticket
     try:
-        from escpos.printer import Usb
+        from printer_config import get_printer, PrinterConnectionError
         from dotenv import load_dotenv
-        
-        USB_VENDOR_ID = int(os.getenv("USB_VENDOR_ID", "0x0FE6"), 16)
-        USB_PRODUCT_ID = int(os.getenv("USB_PRODUCT_ID", "0x811E"), 16)
         
         print(f"Connecting to printer...")
         try:
-            printer = Usb(USB_VENDOR_ID, USB_PRODUCT_ID)
+            printer = get_printer()
             print("✓ Printer connected\n")
-        except Exception as e:
-            print(f"✗ Failed to connect to printer: {e}")
-            print("\nTroubleshooting:")
-            print("1. Ensure printer is powered on and connected via USB")
-            print("2. On Windows, install libusb from: https://github.com/libusb/libusb/releases")
-            print("3. Extract libusb-1.0.dll to C:\\Windows\\System32")
+        except PrinterConnectionError as e:
+            print(f"✗ {e}")
             return 1
         
         print("Printing ticket...\n")
@@ -483,10 +475,11 @@ def interactive_menu():
         print("=" * 40)
         print("1. Fetch emails (start monitoring service)")
         print("2. Reset labels (remove 'Printed' labels)")
-        print("3. Test print (verify printer setup)")
-        print("4. Print ticket (from XML)")
-        print("5. Print label (large text, rotated 90°)")
-        print("6. Start web server")
+        print("3. Setup printer (configure USB/network)")
+        print("4. Test print (verify printer setup)")
+        print("5. Print ticket (from XML)")
+        print("6. Print label (large text, rotated 90°)")
+        print("7. Start web server")
         print("0. Exit")
         print("=" * 40)
         
@@ -500,8 +493,14 @@ def interactive_menu():
         elif choice == "2":
             return reset_labels()
         elif choice == "3":
-            return test_print()
+            # Run printer setup wizard
+            import subprocess
+            result = subprocess.run([sys.executable, "setup_printer.py"])
+            input("\nPress Enter to continue...")
+            continue
         elif choice == "4":
+            return test_print()
+        elif choice == "5":
             # Scan tickets directory
             tickets_dir = os.path.join(os.path.dirname(__file__), "tickets")
             if not os.path.exists(tickets_dir):
@@ -548,7 +547,7 @@ def interactive_menu():
                 print("✗ Invalid input")
                 input("\nPress Enter to continue...")
                 
-        elif choice == "5":
+        elif choice == "6":
             # Print label
             print("\n" + "-" * 40)
             print("Print Label (Large Text)")
@@ -580,7 +579,7 @@ def interactive_menu():
             else:
                 input("\nPrinting failed. Press Enter to continue...")
                 
-        elif choice == "6":
+        elif choice == "7":
             print("\nStarting web server...")
             print("Host: 0.0.0.0")
             print("Port: 5000")
@@ -610,6 +609,12 @@ def main():
     reset_parser = subparsers.add_parser(
         "reset-labels",
         help="Remove 'Printed' label from all emails"
+    )
+    
+    # Setup printer command
+    setup_parser = subparsers.add_parser(
+        "setup",
+        help="Run interactive printer setup wizard"
     )
     
     # Test print command
@@ -668,6 +673,11 @@ def main():
         return fetch_emails()
     elif args.command == "reset-labels":
         return reset_labels()
+    elif args.command == "setup":
+        # Launch printer setup wizard
+        import subprocess
+        result = subprocess.run([sys.executable, "setup_printer.py"])
+        return result.returncode
     elif args.command == "test-print":
         return test_print()
     elif args.command == "print-ticket":
