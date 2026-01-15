@@ -9,6 +9,8 @@
 - 📨 **Gmail Integration**: Automatically monitor and print emails labeled with `KanbanPrint`
 - 🎫 **Jira Ticket Printing**: Print Jira tickets from XML exports with clean, readable formatting
 - 🏷️ **Large Label Printing**: Create large ASCII art labels rotated 90° for Kanban lane headers
+- 📊 **Barcode Generation**: Generate scannable barcodes (CODE128, CODE39, EAN13, UPC-A, and more)
+- 🐾 **ASCII Animals**: AI-generated ASCII art using lightweight local LLM (no storage needed!)
 - 🖨️ **Flexible Printer Support**: USB or network connection for thermal printers
 - 🎛️ **Interactive Setup Wizard**: Easy printer configuration for USB or network printers
 - 🎛️ **Interactive CLI Menu**: User-friendly numbered menu for all operations
@@ -103,6 +105,15 @@ python main.py setup
 ```
 Interactive wizard to configure USB or network printer connection.
 
+**ASCII Animals (AI-Generated) 🐾**:
+```bash
+python main.py animals
+# Or generate a specific animal:
+python main.py animals dragon
+python main.py animals cat
+```
+Generate unique ASCII art of animals using a lightweight local LLM! See [ASCII_ANIMALS.md](ASCII_ANIMALS.md) for details.
+
 **Fetch and Print Emails**:
 ### Interactive Menu (Recommended)
 ```bash
@@ -116,10 +127,13 @@ Operation R - Main Menu
 ========================================
 1. Fetch emails (start monitoring service)
 2. Reset labels (remove 'Printed' labels)
-3. Test print (verify printer setup)
-4. Print ticket (from XML)
-5. Print label (large text, rotated 90°)
-6. Start web server
+3. Setup printer (configure USB/network)
+4. Test print (verify printer setup)
+5. Print ticket (from XML)
+6. Print label (large text, rotated 90°)
+7. Print barcode (scannable barcode)
+8. ASCII Animals 🐾 (AI-generated art)
+9. Start web server
 0. Exit
 ========================================
 ```
@@ -146,6 +160,16 @@ python main.py print-label IN PROGRESS
 python main.py print-label DONE
 ```
 Creates large ASCII art labels rotated 90° for visibility from a distance.
+
+**Print Barcode**:
+```bash
+python main.py barcode "Hello123"
+python main.py barcode "TICKET-2024-001" --type CODE39
+python main.py barcode "1234567890128" --type EAN13 --height 150
+python main.py barcode --list  # Show all supported barcode types
+python main.py barcode --list-examples  # Show format examples
+```
+Generate scannable barcodes for tickets, inventory, URLs, and more. Supports CODE128, CODE39, EAN13, UPC-A, and more.
 
 **Test Printer**:
 ```bash
@@ -197,6 +221,52 @@ Create large, visible labels for Kanban lanes or sections:
 - Keep text under 20 characters for reasonable label length
 - Use short, impactful words (TODO, BLOCKED, REVIEW)
 - Labels are designed to be visible from across the room
+
+---
+
+## 📊 Barcode Printing
+
+Generate and print scannable barcodes for inventory, tickets, URLs, and more:
+
+1. **Interactive**: Run `python main.py` → Option 7 → Select type and enter data
+2. **Command Line**: `python main.py barcode "YOUR DATA"`
+
+**Supported Barcode Types:**
+- **CODE128**: Most versatile, supports alphanumeric (recommended for general use)
+- **CODE39**: Simple alphanumeric, widely used in logistics
+- **EAN13**: 13-digit retail product codes
+- **EAN8**: 8-digit compact retail codes
+- **UPC-A**: 12-digit North American retail standard
+- **ITF**: Interleaved 2 of 5, numeric only (shipping/warehouse)
+- **CODABAR**: Numeric with special characters (libraries/blood banks)
+- **CODE93**: Compact alphanumeric
+
+**Examples:**
+```bash
+# General text (CODE128 default)
+python main.py barcode "Hello123"
+
+# Ticket numbers
+python main.py barcode "TICKET-2024-001" --type CODE39
+
+# Product codes
+python main.py barcode "1234567890128" --type EAN13
+
+# Custom height and width
+python main.py barcode "ABC123" --height 150 --width 4
+
+# List all supported types
+python main.py barcode --list
+
+# Show format examples
+python main.py barcode --list-examples
+```
+
+**Tips:**
+- Use CODE128 for general alphanumeric text (most flexible)
+- EAN13/UPC-A require exact digit lengths (13 and 12 respectively)
+- Increase height (50-255) for better scanability at distance
+- Position option: ABOVE, BELOW, BOTH, or OFF for human-readable text
 
 ---
 

@@ -479,7 +479,9 @@ def interactive_menu():
         print("4. Test print (verify printer setup)")
         print("5. Print ticket (from XML)")
         print("6. Print label (large text, rotated 90°)")
-        print("7. Start web server")
+        print("7. Print barcode (scannable barcode)")
+        print("8. ASCII Animals 🐾 (AI-generated art)")
+        print("9. Start web server")
         print("0. Exit")
         print("=" * 40)
         
@@ -580,6 +582,84 @@ def interactive_menu():
                 input("\nPrinting failed. Press Enter to continue...")
                 
         elif choice == "7":
+            # Print barcode
+            print("\n" + "-" * 40)
+            print("Print Barcode (Scannable)")
+            print("-" * 40)
+            print("Generate barcodes for tickets, inventory, URLs, etc.")
+            print("-" * 40)
+            
+            # Show barcode type menu
+            print("\nSupported Barcode Types:")
+            print("1. CODE128 (recommended for general use)")
+            print("2. CODE39 (simple alphanumeric)")
+            print("3. EAN13 (13-digit product codes)")
+            print("4. EAN8 (8-digit compact codes)")
+            print("5. UPC-A (12-digit retail)")
+            print("6. ITF (numeric shipping/warehouse)")
+            print("7. More options...")
+            print("0. Back to main menu")
+            
+            bc_choice = input("\nSelect barcode type (default: 1): ").strip() or "1"
+            
+            if bc_choice == "0":
+                continue
+            
+            barcode_types = {
+                "1": "CODE128",
+                "2": "CODE39",
+                "3": "EAN13",
+                "4": "EAN8",
+                "5": "UPC-A",
+                "6": "ITF",
+                "7": None  # Show all options
+            }
+            
+            barcode_type = barcode_types.get(bc_choice, "CODE128")
+            
+            if barcode_type is None:
+                # Show all barcode types
+                import subprocess
+                subprocess.run([sys.executable, "print_barcode.py", "--list"])
+                barcode_type = input("\nEnter barcode type: ").strip().upper() or "CODE128"
+            
+            # Get barcode text
+            print(f"\nBarcode Type: {barcode_type}")
+            barcode_text = input("Enter text/data to encode: ").strip()
+            
+            if not barcode_text:
+                print("✗ No text entered")
+                input("\nPress Enter to continue...")
+                continue
+            
+            # Optional: Get custom height
+            height_input = input("Barcode height (50-255, default: 100): ").strip()
+            height = 100
+            if height_input:
+                try:
+                    height = int(height_input)
+                    if not (50 <= height <= 255):
+                        print("Height out of range, using default (100)")
+                        height = 100
+                except ValueError:
+                    print("Invalid height, using default (100)")
+                    height = 100
+            
+            import subprocess
+            cmd = [sys.executable, "print_barcode.py", barcode_text, 
+                   "--type", barcode_type, "--height", str(height)]
+            result = subprocess.run(cmd)
+            if result.returncode == 0:
+                input("\nPress Enter to continue...")
+            else:
+                input("\nBarcode printing failed. Press Enter to continue...")
+                
+        elif choice == "8":            # ASCII Animals
+            import subprocess
+            result = subprocess.run([sys.executable, "ascii_animals.py"])
+            input("\nPress Enter to continue...")
+            
+        elif choice == "9":            
             print("\nStarting web server...")
             print("Host: 0.0.0.0")
             print("Port: 5000")
@@ -643,6 +723,66 @@ def main():
         "text",
         nargs="+",
         help="Text to print on label"
+    )
+    
+    # Print barcode command
+    barcode_parser = subparsers.add_parser(
+        "barcode",
+        help="Generate and print scannable barcodes"
+    )
+    barcode_parser.add_argument(
+        "text",
+        nargs="?",
+        help="Text or data to encode in the barcode"
+    )
+    barcode_parser.add_argument(
+        "-t", "--type",
+        default="CODE128",
+        help="Barcode type (CODE128, CODE39, EAN13, etc.)"
+    )
+    barcode_parser.add_argument(
+        "--height",
+        type=int,
+        default=100,
+        help="Barcode height in dots (1-255, default: 100)"
+    )
+    barcode_parser.add_argument(
+        "--width",
+        type=int,
+        default=3,
+        help="Barcode module width in dots (2-6, default: 3)"
+    )
+    barcode_parser.add_argument(
+        "--position",
+        choices=['ABOVE', 'BELOW', 'BOTH', 'OFF'],
+        default="BELOW",
+        help="Position of human-readable text (default: BELOW)"
+    )
+    barcode_parser.add_argument(
+        "--list",
+        action="store_true",
+        help="List all supported barcode types"
+    )
+    barcode_parser.add_argument(
+        "--list-examples",
+        action="store_true",
+        help="Show barcode format examples"
+    )
+    
+    # ASCII Animals command
+    animals_parser = subparsers.add_parser(
+        "animals",
+        help="Generate AI-powered ASCII art of animals 🐾"
+    )
+    animals_parser.add_argument(
+        "animal",
+        nargs="?",
+        help="Animal to generate (leave empty for interactive mode)"
+    )
+    animals_parser.add_argument(
+        "--list",
+        action="store_true",
+        help="List available animals"
     )
     
     # Server command
@@ -728,6 +868,41 @@ def main():
         label_text = ' '.join(args.text)
         import subprocess
         result = subprocess.run([sys.executable, "print_label.py"] + args.text)
+        return result.returncode
+    elif args.command == "barcode":
+        # Print barcode
+        import subprocess
+        cmd = [sys.executable, "print_barcode.py"]
+        
+        if args.list:
+            cmd.append("--list")
+        elif args.list_examples:
+            cmd.append("--list-examples")
+        elif args.text:
+            cmd.append(args.text)
+            if args.type:
+                cmd.extend(["--type", args.type])
+            if args.height != 100:
+                cmd.extend(["--height", str(args.height)])
+            if args.width != 3:
+                cmd.extend(["--width", str(args.width)])
+            if args.position != "BELOW":
+                cmd.extend(["--position", args.position])
+        else:
+            print("✗ Error: text is required (unless using --list or --list-examples)")
+            return 1
+        
+        result = subprocess.run(cmd)
+        return result.returncode
+    elif args.command == "animals":
+        # ASCII Animals
+        import subprocess
+        cmd = [sys.executable, "ascii_animals.py"]
+        if args.list:
+            cmd.append("--list")
+        elif args.animal:
+            cmd.append(args.animal)
+        result = subprocess.run(cmd)
         return result.returncode
     elif args.command == "server":
         return start_server(host=args.host, port=args.port)

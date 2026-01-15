@@ -64,3 +64,6 @@ __output__/
 # Gmail Authentication
 credentials.json
 token.pickle
+
+# Exclude sensitive files
+tickets/*
